@@ -29224,13 +29224,16 @@ async function run() {
             if (files.length === 0) {
                 break;
             }
-            changedFiles.push(...files.map(f => f.filename));
+            const notDeletedFiles = files.filter(f => f.status !== 'removed');
+            changedFiles.push(...notDeletedFiles.map(f => f.filename));
             page++;
         }
         return changedFiles;
     };
     let changedFiles = await getAllChangedFiles();
     changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|css|md)$/.test(f));
+    console.log('Changed files:');
+    console.log('   ', changedFiles.join('\n'));
     const commentIdentifier = '<!-- prettier-check-comment -->';
     if (changedFiles.length === 0) {
         const body = `${commentIdentifier}\nPrettier check passed! 🎉`;

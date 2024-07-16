@@ -23,7 +23,8 @@ export async function run(): Promise<void> {
       if (files.length === 0) {
         break
       }
-      changedFiles.push(...files.map(f => f.filename))
+      const notDeletedFiles = files.filter(f => f.status !== 'removed')
+      changedFiles.push(...notDeletedFiles.map(f => f.filename))
       page++
     }
     return changedFiles
@@ -34,6 +35,9 @@ export async function run(): Promise<void> {
   changedFiles = changedFiles.filter(f =>
     /\.(js|jsx|ts|tsx|json|css|md)$/.test(f)
   )
+
+  console.log('Changed files:')
+  console.log('   ', changedFiles.join('\n'))
 
   const commentIdentifier = '<!-- prettier-check-comment -->'
 
