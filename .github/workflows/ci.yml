@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -65,9 +62,6 @@ jobs:
       - name: Install Dependencies
         id: npm-ci
         run: npm ci
-
-      - name: Build
-        run: npm run bundle
 
       - name: Test Local Action
         id: test-action
