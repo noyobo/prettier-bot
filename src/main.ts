@@ -1,9 +1,12 @@
 import { getInput, setFailed, setOutput } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { execSync } from 'node:child_process'
+import fs from 'node:fs'
+import ignore from 'ignore'
 
 export async function run(): Promise<void> {
-  const token = getInput('github-token');;;;
+  const token = getInput('github-token')
+  const prettierIgnore = getInput('prettier-ignore')
 
   const github = getOctokit(token)
 
@@ -33,6 +36,11 @@ export async function run(): Promise<void> {
 
   changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f))
 
+  if (fs.existsSync(prettierIgnore)) {
+    const ig = ignore().add(fs.readFileSync(prettierIgnore, 'utf-8'))
+    changedFiles = changedFiles.filter(f => !ig.ignores(f))
+  }
+
   const commentIdentifier = '<!-- prettier-check-comment -->'
 
   if (changedFiles.length === 0) {
@@ -54,7 +62,9 @@ export async function run(): Promise<void> {
       })
     }
   } else {
-    const prettierOutput = execSync(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' })
+    const prettierResult = execSync(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' })
+    const prettierOutput = prettierResult.trim()
+    console.log(prettierOutput, 111)
     const hasWarnings = prettierOutput.includes('Run Prettier to fix')
     let body
 
