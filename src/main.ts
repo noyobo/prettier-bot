@@ -3,7 +3,7 @@ import { context, getOctokit } from '@actions/github'
 import { execSync } from 'node:child_process'
 
 export async function run(): Promise<void> {
-  const token = getInput('github-token')
+  const token = getInput('github-token');;;;
 
   const github = getOctokit(token)
 
