@@ -1,11 +1,9 @@
 import { getInput, setFailed, setOutput } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { exec as execCallback, type ExecException } from 'node:child_process'
-import { promisify } from 'node:util'
+import { exec } from 'node:child_process'
 import fs from 'node:fs'
 import ignore from 'ignore'
-
-const exec = promisify(execCallback)
+import { ExecException } from 'child_process'
 
 export async function run(): Promise<void> {
   const token = getInput('github-token')
@@ -44,15 +42,12 @@ export async function run(): Promise<void> {
     changedFiles = changedFiles.filter(f => !ig.ignores(f))
   }
 
-  const runExec = async (
-    cmd: string
-  ): Promise<{ err: ExecException | null | Error; stdout: string; stderr: string }> => {
-    try {
-      const { stdout, stderr } = await exec(cmd)
-      return { err: null, stdout, stderr }
-    } catch (error: Error) {
-      return { err: error, stdout: '', stderr: error.stderr }
-    }
+  const runExec = (cmd: string): Promise<{ err: ExecException | null; stdout: string; stderr: string }> => {
+    return new Promise((resolve, reject) => {
+      exec(cmd, (err, stdout, stderr) => {
+        resolve({ err, stdout, stderr })
+      })
+    })
   }
 
   const commentIdentifier = '<!-- prettier-check-comment -->'
