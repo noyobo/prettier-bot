@@ -64,7 +64,7 @@ export async function run(): Promise<void> {
     let body
 
     if (!hasWarnings) {
-      body = `${commentIdentifier}\n**💄Prettier check passed!** 🎉`
+      body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
       const PRETTIER_OUTPUT = fs.readFileSync('prettier_output.txt', 'utf8')
       const lines = PRETTIER_OUTPUT.trim().split('\n')
