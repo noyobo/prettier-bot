@@ -33,7 +33,7 @@ export async function run(): Promise<void> {
   let changedFiles = await getAllChangedFiles()
 
   changedFiles = changedFiles.filter(f =>
-    /\.(js|jsx|ts|tsx|json|css|md)$/.test(f)
+    /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f)
   )
 
   const commentIdentifier = '<!-- prettier-check-comment -->'
