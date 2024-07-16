@@ -66,6 +66,9 @@ jobs:
         id: npm-ci
         run: npm ci
 
+      - name: Build
+        run: npm run bundle
+
       - name: Test Local Action
         id: test-action
         uses: ./
