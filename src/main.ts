@@ -8,50 +8,51 @@ export async function run(): Promise<void> {
 
   const github = getOctokit(token)
 
-  const getAllChangedFiles = async () => {
-    let changedFiles: any[] = []
+  const getAllChangedFiles = async (): Promise<string[]> => {
+    const changedFiles: string[] = []
     let page = 1
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { data: files } = await github.rest.pulls.listFiles({
         owner: context.repo.owner,
         repo: context.repo.repo,
         pull_number: context.issue.number,
         per_page: 100,
-        page: page
+        page
       })
       if (files.length === 0) {
         break
       }
-      changedFiles = changedFiles.concat(files.map(f => f.filename))
+      changedFiles.push(...files.map(f => f.filename))
       page++
     }
     return changedFiles
   }
 
-  const changedFiles = await getAllChangedFiles().then(files => {
-    return files.filter(f => /\.(js|jsx|ts|tsx|json|css|md)$/.test(f))
-  })
+  let changedFiles = await getAllChangedFiles()
+
+  changedFiles = changedFiles.filter(f =>
+    /\.(js|jsx|ts|tsx|json|css|md)$/.test(f)
+  )
 
   const commentIdentifier = '<!-- prettier-check-comment -->'
-  const body = `${commentIdentifier}\nPrettier check passed! 🎉`
 
   if (changedFiles.length === 0) {
+    const body = `${commentIdentifier}\nPrettier check passed! 🎉`
     const { data: comments } = await github.rest.issues.listComments({
       owner: context.repo.owner,
       repo: context.repo.repo,
       issue_number: context.issue.number
     })
 
-    const comment = comments.find(comment =>
-      comment.body!.includes(commentIdentifier)
-    )
+    const comment = comments.find(c => c.body!.includes(commentIdentifier))
 
     if (comment) {
       await github.rest.issues.updateComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
         comment_id: comment.id,
-        body: body
+        body
       })
     }
   } else {
@@ -79,23 +80,21 @@ export async function run(): Promise<void> {
       issue_number: context.issue.number
     })
 
-    const comment = comments.find(comment =>
-      comment.body!.includes(commentIdentifier)
-    )
+    const comment = comments.find(c => c.body!.includes(commentIdentifier))
 
     if (comment) {
       await github.rest.issues.updateComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
         comment_id: comment.id,
-        body: body
+        body
       })
     } else {
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: context.issue.number,
-        body: body
+        body
       })
     }
 
