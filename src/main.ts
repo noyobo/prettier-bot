@@ -50,8 +50,7 @@ export async function run(): Promise<void> {
     try {
       const { stdout, stderr } = await exec(cmd)
       return { err: null, stdout, stderr }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: Error) {
       return { err: error, stdout: '', stderr: error.stderr }
     }
   }

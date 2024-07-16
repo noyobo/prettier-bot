@@ -29838,10 +29838,8 @@ exports.run = run;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const node_child_process_1 = __nccwpck_require__(7718);
-const node_util_1 = __nccwpck_require__(7261);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
-const exec = (0, node_util_1.promisify)(node_child_process_1.exec);
 async function run() {
     const token = (0, core_1.getInput)('github-token');
     const prettierIgnore = (0, core_1.getInput)('prettier-ignore');
@@ -29873,15 +29871,12 @@ async function run() {
         const ig = (0, ignore_1.default)().add(node_fs_1.default.readFileSync(prettierIgnore, 'utf-8'));
         changedFiles = changedFiles.filter(f => !ig.ignores(f));
     }
-    const runExec = async (cmd) => {
-        try {
-            const { stdout, stderr } = await exec(cmd);
-            return { err: null, stdout, stderr };
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        }
-        catch (error) {
-            return { err: error, stdout: '', stderr: error.stderr };
-        }
+    const runExec = (cmd) => {
+        return new Promise((resolve, reject) => {
+            (0, node_child_process_1.exec)(cmd, (err, stdout, stderr) => {
+                resolve({ err, stdout, stderr });
+            });
+        });
     };
     const commentIdentifier = '<!-- prettier-check-comment -->';
     if (changedFiles.length === 0) {
