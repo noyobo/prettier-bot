@@ -1,10 +1,13 @@
 import { getInput, setFailed, setOutput } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { execSync } from 'node:child_process'
+import { exec } from 'node:child_process'
 import fs from 'node:fs'
+import ignore from 'ignore'
+import { ExecException } from 'child_process'
 
 export async function run(): Promise<void> {
   const token = getInput('github-token')
+  const prettierIgnore = getInput('prettier-ignore')
 
   const github = getOctokit(token)
 
@@ -34,6 +37,19 @@ export async function run(): Promise<void> {
 
   changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f))
 
+  if (fs.existsSync(prettierIgnore)) {
+    const ig = ignore().add(fs.readFileSync(prettierIgnore, 'utf-8'))
+    changedFiles = changedFiles.filter(f => !ig.ignores(f))
+  }
+
+  const runExec = (cmd: string): Promise<{ err: ExecException | null; stdout: string; stderr: string }> => {
+    return new Promise(resolve => {
+      exec(cmd, (err, stdout, stderr) => {
+        resolve({ err, stdout, stderr })
+      })
+    })
+  }
+
   const commentIdentifier = '<!-- prettier-check-comment -->'
 
   if (changedFiles.length === 0) {
@@ -55,19 +71,20 @@ export async function run(): Promise<void> {
       })
     }
   } else {
-    const prettierCheck = execSync(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' })
-    const hasWarnings = prettierCheck.includes('Run Prettier to fix')
+    const child = await runExec(`npx prettier --check ${changedFiles.join(' ')}`)
+    const prettierOutput = child.stderr.trim()
     let body
 
-    if (!hasWarnings) {
+    if (!child.err) {
       body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
-      const PRETTIER_OUTPUT = fs.readFileSync('prettier_output.txt', 'utf8')
-      const lines = PRETTIER_OUTPUT.trim().split('\n')
-      lines.shift()
+      const lines = prettierOutput.trim().split('\n')
       lines.pop()
-      const prettierCommand = `npx prettier --write ${lines.map(line => line.trim().replace('[warn] ', '')).join(' ')}`
-      body = `${commentIdentifier}\n🚨Prettier check failed for the following files:\n\n\`\`\`\n${PRETTIER_OUTPUT.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
+      const prettierCommand = `npx prettier --write ${lines
+        .map(line => line.trim().replace('[warn] ', ''))
+        .map(f => JSON.stringify(f))
+        .join(' ')}`
+      body = `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
     }
 
     const { data: comments } = await github.rest.issues.listComments({
@@ -94,7 +111,7 @@ export async function run(): Promise<void> {
       })
     }
 
-    if (hasWarnings) {
+    if (child.err) {
       setFailed('Prettier check failed')
       setOutput('exitCode', 1)
     } else {

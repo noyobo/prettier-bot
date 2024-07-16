@@ -11,6 +11,10 @@ inputs:
     description: The GitHub token used to create an authenticated client
     default: ${{ github.token }}
     required: false
+  prettier-ignore:
+    description: The path to the prettier ignore file
+    default: .prettierignore
+    required: false
 
 outputs:
   exitCode:
