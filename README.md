@@ -8,10 +8,7 @@ A GitHub action for styling changed files on pull_request
 name: prettier-check
 
 on:
-  pull_request:
-    branches:
-      - main
-  push:
+  pull_request:  # Must run on pull requests
     branches:
       - main
 
@@ -30,5 +27,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prettier Bot
-        uses: actions/prettier-bot@v1
+        uses: noyobo/prettier-bot@v1
 ```
+
+### Default Behavior
+
+- Matched changed files `/\.(js|jsx|ts|tsx|json|css|md)` on the pull request
+- Use root `.prettierrc` file for prettier configuration
+- Use root `.prettierignore` file for prettier ignore
