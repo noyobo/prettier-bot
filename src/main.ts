@@ -55,7 +55,7 @@ export async function run(): Promise<void> {
     }
   } else {
     const prettierOutput = execSync(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' })
-    const hasWarnings = prettierOutput.indexOf('Run Prettier to fix') !== -1
+    const hasWarnings = prettierOutput.includes('Run Prettier to fix')
     let body
 
     if (!hasWarnings) {
