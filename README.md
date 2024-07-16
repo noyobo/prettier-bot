@@ -32,6 +32,6 @@ jobs:
 
 ### Default Behavior
 
-- Matched changed files `/\.(js|jsx|ts|tsx|json|css|md)` on the pull request
+- Matched changed files `/\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/` on the pull request
 - Use root `.prettierrc` file for prettier configuration
 - Use root `.prettierignore` file for prettier ignore
