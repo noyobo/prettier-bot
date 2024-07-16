@@ -29871,6 +29871,13 @@ async function run() {
         const ig = (0, ignore_1.default)().add(node_fs_1.default.readFileSync(prettierIgnore, 'utf-8'));
         changedFiles = changedFiles.filter(f => !ig.ignores(f));
     }
+    const runExec = (cmd) => {
+        return new Promise((resolve, reject) => {
+            (0, node_child_process_1.exec)(cmd, (err, stdout, stderr) => {
+                resolve({ err, stdout, stderr });
+            });
+        });
+    };
     const commentIdentifier = '<!-- prettier-check-comment -->';
     if (changedFiles.length === 0) {
         const body = `${commentIdentifier}\nPrettier check passed! 🎉`;
@@ -29890,17 +29897,14 @@ async function run() {
         }
     }
     else {
-        const prettierResult = (0, node_child_process_1.execSync)(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' });
-        const prettierOutput = prettierResult.trim();
-        console.log(prettierOutput, 111);
-        const hasWarnings = prettierOutput.includes('Run Prettier to fix');
+        const child = await runExec(`npx prettier --check ${changedFiles.join(' ')}`);
+        const prettierOutput = child.stderr.trim();
         let body;
-        if (!hasWarnings) {
+        if (!child.err) {
             body = `${commentIdentifier}\nPrettier check passed! 🎉`;
         }
         else {
             const lines = prettierOutput.trim().split('\n');
-            lines.shift();
             lines.pop();
             const prettierCommand = `npx prettier --write ${lines
                 .map(line => line.trim().replace('[warn] ', ''))
@@ -29930,7 +29934,7 @@ async function run() {
                 body
             });
         }
-        if (hasWarnings) {
+        if (child.err) {
             (0, core_1.setFailed)('Prettier check failed');
             (0, core_1.setOutput)('exitCode', 1);
         }
