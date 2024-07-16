@@ -29231,7 +29231,7 @@ async function run() {
         return changedFiles;
     };
     let changedFiles = await getAllChangedFiles();
-    changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|css|md)$/.test(f));
+    changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f));
     const commentIdentifier = '<!-- prettier-check-comment -->';
     if (changedFiles.length === 0) {
         const body = `${commentIdentifier}\nPrettier check passed! 🎉`;

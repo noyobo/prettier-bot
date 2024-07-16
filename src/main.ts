@@ -32,9 +32,7 @@ export async function run(): Promise<void> {
 
   let changedFiles = await getAllChangedFiles()
 
-  changedFiles = changedFiles.filter(f =>
-    /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f)
-  )
+  changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f))
 
   const commentIdentifier = '<!-- prettier-check-comment -->'
 
@@ -57,10 +55,7 @@ export async function run(): Promise<void> {
       })
     }
   } else {
-    const prettierCheck = execSync(
-      `npx prettier --check ${changedFiles.join(' ')}`,
-      { encoding: 'utf8' }
-    )
+    const prettierCheck = execSync(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' })
     const hasWarnings = prettierCheck.includes('Run Prettier to fix')
     let body
 

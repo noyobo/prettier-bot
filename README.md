@@ -8,7 +8,7 @@ A GitHub action for styling changed files on pull_request
 name: prettier-check
 
 on:
-  pull_request:  # Must run on pull requests
+  pull_request: # Must run on pull requests
     branches:
       - main
 
@@ -32,6 +32,7 @@ jobs:
 
 ### Default Behavior
 
-- Matched changed files `/\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/` on the pull request
+- Matched changed files on the pull request
+  - file extensions: `/\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/`
 - Use root `.prettierrc` file for prettier configuration
 - Use root `.prettierignore` file for prettier ignore
