@@ -29232,8 +29232,6 @@ async function run() {
     };
     let changedFiles = await getAllChangedFiles();
     changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|css|md)$/.test(f));
-    console.log('Changed files:');
-    console.log('   ', changedFiles.join('\n'));
     const commentIdentifier = '<!-- prettier-check-comment -->';
     if (changedFiles.length === 0) {
         const body = `${commentIdentifier}\nPrettier check passed! 🎉`;
@@ -29291,9 +29289,11 @@ async function run() {
         }
         if (hasWarnings) {
             (0, core_1.setFailed)('Prettier check failed');
+            (0, core_1.setOutput)('exitCode', 1);
         }
         else {
             console.log('Prettier check passed');
+            (0, core_1.setOutput)('exitCode', 0);
         }
     }
 }
