@@ -1,4 +1,4 @@
-import { getInput } from '@actions/core'
+import { getInput, setFailed } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -100,7 +100,7 @@ export async function run(): Promise<void> {
     }
 
     if (hasWarnings) {
-      core.setFailed('Prettier check failed')
+      setFailed('Prettier check failed')
     } else {
       console.log('Prettier check passed')
     }
