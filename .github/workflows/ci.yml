@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   test-typescript:
@@ -53,12 +55,24 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install Dependencies
+        id: npm-ci
+        run: npm ci
+
+      - name: Build
+        run: npm run bundle
+
       - name: Test Local Action
         id: test-action
         uses: ./
-        with:
-          milliseconds: 2000
 
       - name: Print Output
         id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+        run: echo "${{ steps.test-action.outputs.exitCode }}"

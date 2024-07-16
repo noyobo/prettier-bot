@@ -1,23 +1,21 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: Prettier Bot
+description: Prettier pull request changed files.
+author: noyobo
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: 'heart'
-  color: 'red'
+  color: #000000
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
+  github-token:
+    description: The GitHub token used to create an authenticated client
+    default: ${{ github.token }}
+    required: false
 
-# Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  exitCode:
+    description: 'The exit code of the prettier command'
 
 runs:
   using: node20
