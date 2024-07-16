@@ -1,11 +1,10 @@
-name: Prettier Bot
+name: noyobo/prettier-bot
 description: Prettier pull request changed files.
 author: noyobo
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: 'heart'
-  color: #000000
+  icon: check-circle
+  color: purple
 
 inputs:
   github-token:
