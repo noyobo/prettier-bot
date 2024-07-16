@@ -43,7 +43,7 @@ export async function run(): Promise<void> {
   }
 
   const runExec = (cmd: string): Promise<{ err: ExecException | null; stdout: string; stderr: string }> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       exec(cmd, (err, stdout, stderr) => {
         resolve({ err, stdout, stderr })
       })

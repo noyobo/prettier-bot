@@ -29872,7 +29872,7 @@ async function run() {
         changedFiles = changedFiles.filter(f => !ig.ignores(f));
     }
     const runExec = (cmd) => {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             (0, node_child_process_1.exec)(cmd, (err, stdout, stderr) => {
                 resolve({ err, stdout, stderr });
             });
