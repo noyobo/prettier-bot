@@ -29910,7 +29910,7 @@ async function run() {
                 .map(line => line.trim().replace('[warn] ', ''))
                 .map(f => JSON.stringify(f))
                 .join(' ')}`;
-            body = `${commentIdentifier}\n🚨Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``;
+            body = `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``;
         }
         const { data: comments } = await github.rest.issues.listComments({
             owner: github_1.context.repo.owner,
@@ -31862,8 +31862,6 @@ const main_1 = __nccwpck_require__(399);
 // eslint-disable-next-line github/no-then
 (0, main_1.run)().catch(err => {
     console.error(err);
-    ;
-    ;
     process.exit(1);
 });
 

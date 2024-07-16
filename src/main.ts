@@ -84,7 +84,7 @@ export async function run(): Promise<void> {
         .map(line => line.trim().replace('[warn] ', ''))
         .map(f => JSON.stringify(f))
         .join(' ')}`
-      body = `${commentIdentifier}\n🚨Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
+      body = `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
     }
 
     const { data: comments } = await github.rest.issues.listComments({
