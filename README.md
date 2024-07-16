@@ -1,9 +1,8 @@
 # Prettier Bot
 
-A GitHub action for styling changed files on pull_request 
+A GitHub action for styling changed files on pull_request
 
 ## Usage
-
 
 ```yml
 name: prettier-check
