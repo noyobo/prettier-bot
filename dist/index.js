@@ -1843,7 +1843,7 @@ class HttpClient {
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
         }
-        if (!useProxy) {
+        if (this._keepAlive && !useProxy) {
             agent = this._agent;
         }
         // if agent is already assigned use that agent.
@@ -1875,11 +1875,15 @@ class HttpClient {
             agent = tunnelAgent(agentOptions);
             this._proxyAgent = agent;
         }
-        // if tunneling agent isn't assigned create a new agent
-        if (!agent) {
+        // if reusing agent across request and tunneling agent isn't assigned create a new agent
+        if (this._keepAlive && !agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
             agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
             this._agent = agent;
+        }
+        // if not using private agent and tunnel agent isn't setup then use global agent
+        if (!agent) {
+            agent = usingSsl ? https.globalAgent : http.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
             // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -29193,78 +29197,55 @@ function wrappy (fn, cb) {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
-const core = __importStar(__nccwpck_require__(2186));
+const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const node_child_process_1 = __nccwpck_require__(7718);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 async function run() {
-    const token = core.getInput('github-token');
+    const token = (0, core_1.getInput)('github-token');
     const github = (0, github_1.getOctokit)(token);
     const getAllChangedFiles = async () => {
-        let changedFiles = [];
+        const changedFiles = [];
         let page = 1;
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const { data: files } = await github.rest.pulls.listFiles({
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
                 pull_number: github_1.context.issue.number,
                 per_page: 100,
-                page: page
+                page
             });
             if (files.length === 0) {
                 break;
             }
-            changedFiles = changedFiles.concat(files.map(f => f.filename));
+            changedFiles.push(...files.map(f => f.filename));
             page++;
         }
         return changedFiles;
     };
-    const changedFiles = await getAllChangedFiles().then(files => {
-        return files.filter(f => /\.(js|jsx|ts|tsx|json|css|md)$/.test(f));
-    });
+    let changedFiles = await getAllChangedFiles();
+    changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|css|md)$/.test(f));
     const commentIdentifier = '<!-- prettier-check-comment -->';
-    const body = `${commentIdentifier}\nPrettier check passed! 🎉`;
     if (changedFiles.length === 0) {
+        const body = `${commentIdentifier}\nPrettier check passed! 🎉`;
         const { data: comments } = await github.rest.issues.listComments({
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo,
             issue_number: github_1.context.issue.number
         });
-        const comment = comments.find(comment => comment.body.includes(commentIdentifier));
+        const comment = comments.find(c => c.body.includes(commentIdentifier));
         if (comment) {
             await github.rest.issues.updateComment({
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
                 comment_id: comment.id,
-                body: body
+                body
             });
         }
     }
@@ -29273,7 +29254,7 @@ async function run() {
         const hasWarnings = prettierCheck.includes('Run Prettier to fix');
         let body;
         if (!hasWarnings) {
-            body = `${commentIdentifier}\n**💄Prettier check passed!** 🎉`;
+            body = `${commentIdentifier}\nPrettier check passed! 🎉`;
         }
         else {
             const PRETTIER_OUTPUT = node_fs_1.default.readFileSync('prettier_output.txt', 'utf8');
@@ -29288,13 +29269,13 @@ async function run() {
             repo: github_1.context.repo.repo,
             issue_number: github_1.context.issue.number
         });
-        const comment = comments.find(comment => comment.body.includes(commentIdentifier));
+        const comment = comments.find(c => c.body.includes(commentIdentifier));
         if (comment) {
             await github.rest.issues.updateComment({
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
                 comment_id: comment.id,
-                body: body
+                body
             });
         }
         else {
@@ -29302,11 +29283,14 @@ async function run() {
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
                 issue_number: github_1.context.issue.number,
-                body: body
+                body
             });
         }
         if (hasWarnings) {
-            core.setFailed('Prettier check failed');
+            (0, core_1.setFailed)('Prettier check failed');
+        }
+        else {
+            console.log('Prettier check passed');
         }
     }
 }
@@ -31224,11 +31208,8 @@ var __webpack_exports__ = {};
 var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-/**
- * The entrypoint for the action.
- */
 const main_1 = __nccwpck_require__(399);
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
+// eslint-disable-next-line github/no-then
 (0, main_1.run)().catch(err => {
     console.error(err);
     process.exit(1);
