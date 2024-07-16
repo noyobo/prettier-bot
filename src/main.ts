@@ -1,7 +1,6 @@
 import { getInput, setFailed, setOutput } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { execSync } from 'node:child_process'
-import fs from 'node:fs'
 
 export async function run(): Promise<void> {
   const token = getInput('github-token')
@@ -55,19 +54,21 @@ export async function run(): Promise<void> {
       })
     }
   } else {
-    const prettierCheck = execSync(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' })
-    const hasWarnings = prettierCheck.includes('Run Prettier to fix')
+    const prettierOutput = execSync(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' })
+    const hasWarnings = prettierOutput.indexOf('Run Prettier to fix') !== -1
     let body
 
     if (!hasWarnings) {
       body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
-      const PRETTIER_OUTPUT = fs.readFileSync('prettier_output.txt', 'utf8')
-      const lines = PRETTIER_OUTPUT.trim().split('\n')
+      const lines = prettierOutput.trim().split('\n')
       lines.shift()
       lines.pop()
-      const prettierCommand = `npx prettier --write ${lines.map(line => line.trim().replace('[warn] ', '')).join(' ')}`
-      body = `${commentIdentifier}\n🚨Prettier check failed for the following files:\n\n\`\`\`\n${PRETTIER_OUTPUT.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
+      const prettierCommand = `npx prettier --write ${lines
+        .map(line => line.trim().replace('[warn] ', ''))
+        .map(f => JSON.stringify(f))
+        .join(' ')}`
+      body = `${commentIdentifier}\n🚨Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
     }
 
     const { data: comments } = await github.rest.issues.listComments({

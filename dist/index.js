@@ -29193,19 +29193,15 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 399:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
 const node_child_process_1 = __nccwpck_require__(7718);
-const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 async function run() {
     const token = (0, core_1.getInput)('github-token');
     const github = (0, github_1.getOctokit)(token);
@@ -29251,19 +29247,21 @@ async function run() {
         }
     }
     else {
-        const prettierCheck = (0, node_child_process_1.execSync)(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' });
-        const hasWarnings = prettierCheck.includes('Run Prettier to fix');
+        const prettierOutput = (0, node_child_process_1.execSync)(`npx prettier --check ${changedFiles.join(' ')}`, { encoding: 'utf8' });
+        const hasWarnings = prettierOutput.indexOf('Run Prettier to fix') !== -1;
         let body;
         if (!hasWarnings) {
             body = `${commentIdentifier}\nPrettier check passed! 🎉`;
         }
         else {
-            const PRETTIER_OUTPUT = node_fs_1.default.readFileSync('prettier_output.txt', 'utf8');
-            const lines = PRETTIER_OUTPUT.trim().split('\n');
+            const lines = prettierOutput.trim().split('\n');
             lines.shift();
             lines.pop();
-            const prettierCommand = `npx prettier --write ${lines.map(line => line.trim().replace('[warn] ', '')).join(' ')}`;
-            body = `${commentIdentifier}\n🚨Prettier check failed for the following files:\n\n\`\`\`\n${PRETTIER_OUTPUT.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``;
+            const prettierCommand = `npx prettier --write ${lines
+                .map(line => line.trim().replace('[warn] ', ''))
+                .map(f => JSON.stringify(f))
+                .join(' ')}`;
+            body = `${commentIdentifier}\n🚨Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``;
         }
         const { data: comments } = await github.rest.issues.listComments({
             owner: github_1.context.repo.owner,
@@ -29410,14 +29408,6 @@ module.exports = require("node:child_process");
 
 "use strict";
 module.exports = require("node:events");
-
-/***/ }),
-
-/***/ 7561:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:fs");
 
 /***/ }),
 
