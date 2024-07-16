@@ -1,4 +1,4 @@
-import { getInput, setFailed } from '@actions/core'
+import { getInput, setFailed, setOutput } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -35,9 +35,6 @@ export async function run(): Promise<void> {
   changedFiles = changedFiles.filter(f =>
     /\.(js|jsx|ts|tsx|json|css|md)$/.test(f)
   )
-
-  console.log('Changed files:')
-  console.log('   ', changedFiles.join('\n'))
 
   const commentIdentifier = '<!-- prettier-check-comment -->'
 
@@ -104,8 +101,10 @@ export async function run(): Promise<void> {
 
     if (hasWarnings) {
       setFailed('Prettier check failed')
+      setOutput('exitCode', 1)
     } else {
       console.log('Prettier check passed')
+      setOutput('exitCode', 0)
     }
   }
 }
