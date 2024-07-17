@@ -12,7 +12,7 @@ export async function run(): Promise<void> {
   const github = getOctokit(token)
 
   const getAllChangedFiles = async (): Promise<string[]> => {
-    const changedFiles: string[] = [];;;;
+    const changedFiles: string[] = []
     let page = 1
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -74,7 +74,7 @@ export async function run(): Promise<void> {
     let stderr = ''
 
     await exec('prettier', ['--check', ...changedFiles], {
-      failOnStdErr: false,
+      ignoreReturnCode: true,
       listeners: {
         stdout: (data: Buffer) => {
           stdout += data.toString()
