@@ -6,8 +6,8 @@ import ignore from 'ignore'
 import { ExecException } from 'child_process'
 
 export async function run(): Promise<void> {
-  const token = getInput('github-token')
-  const prettierIgnore = getInput('prettier-ignore')
+  const token = getInput('github_token')
+  const prettierIgnore = getInput('prettier_ignore')
 
   const github = getOctokit(token)
 

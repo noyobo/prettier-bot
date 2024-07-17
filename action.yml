@@ -7,13 +7,17 @@ branding:
   color: purple
 
 inputs:
-  github-token:
+  github_token:
     description: The GitHub token used to create an authenticated client
     default: ${{ github.token }}
     required: false
-  prettier-ignore:
+  prettier_ignore:
     description: The path to the prettier ignore file
     default: .prettierignore
+    required: false
+  prettier_version:
+    description: The version of prettier to install
+    default: 3.x
     required: false
 
 outputs:
@@ -21,5 +25,7 @@ outputs:
     description: 'The exit code of the prettier command'
 
 runs:
-  using: node20
-  main: dist/index.js
+  pre: |
+    npm install --global prettier@${{ inputs.prettier_version }}
+  using: 'node20'
+  main: 'dist/index.js'
