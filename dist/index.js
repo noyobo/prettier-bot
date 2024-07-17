@@ -29898,7 +29898,7 @@ async function run() {
         }
     }
     else {
-        await runExec(`npm install prettier@${prettierVersion}`).catch(err => {
+        await runExec(`npm install --global prettier@${prettierVersion}`).catch(err => {
             (0, core_1.setFailed)(err.message);
         });
         const child = await runExec(`npx prettier --check ${changedFiles.join(' ')}`);
