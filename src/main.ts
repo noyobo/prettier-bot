@@ -69,7 +69,7 @@ export async function run(): Promise<void> {
     await exec('npm', ['install', '--global', `prettier@${prettierVersion}`])
 
     let stderr = ''
-    const exitCode = await exec('prettier', ['--check', ...changedFiles.map(f => `'${f}'`)], {
+    const exitCode = await exec('prettier', ['--check', ...changedFiles.map(f => encodeURI(f))], {
       ignoreReturnCode: true,
       listeners: {
         stderr: (data: Buffer) => {
@@ -87,7 +87,7 @@ export async function run(): Promise<void> {
       lines.pop()
       const prettierCommand = `npx prettier --write ${lines
         .map(line => line.trim().replace('[warn] ', ''))
-        .map(f => JSON.stringify(f))
+        .map(f => encodeURI(f))
         .join(' ')}`
       body = `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
     }
