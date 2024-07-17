@@ -1,0 +1,36 @@
+name: Update Major Tag
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  update-major-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Extract major version
+        id: extract_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          MAJOR_VERSION=$(echo $TAG_NAME | cut -d'.' -f1)
+          echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
+
+      - name: Update major tag
+        run: |
+          git tag -fa v$MAJOR_VERSION -m "Update v$MAJOR_VERSION tag"
+          git push origin v$MAJOR_VERSION --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
