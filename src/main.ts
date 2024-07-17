@@ -8,6 +8,7 @@ import { ExecException } from 'child_process'
 export async function run(): Promise<void> {
   const token = getInput('github_token')
   const prettierIgnore = getInput('prettier_ignore')
+  const prettierVersion = getInput('prettier_version')
 
   const github = getOctokit(token)
 
@@ -71,6 +72,9 @@ export async function run(): Promise<void> {
       })
     }
   } else {
+    await runExec(`npm install --global prettier@${prettierVersion}`).catch(err => {
+      setFailed(err.message)
+    })
     const child = await runExec(`npx prettier --check ${changedFiles.join(' ')}`)
     const prettierOutput = child.stderr.trim()
     let body

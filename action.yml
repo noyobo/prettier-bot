@@ -25,7 +25,5 @@ outputs:
     description: 'The exit code of the prettier command'
 
 runs:
-  pre: |
-    npm install --global prettier@${{ inputs.prettier_version }}
   using: 'node20'
   main: 'dist/index.js'
