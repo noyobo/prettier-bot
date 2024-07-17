@@ -70,15 +70,11 @@ export async function run(): Promise<void> {
     info(`Installing prettier@${prettierVersion}`)
     await exec('npm', ['install', '--global', `prettier@${prettierVersion}`])
 
-    let stdout = ''
     let stderr = ''
 
-    await exec('prettier', ['--check', ...changedFiles], {
+    const exitCode = await exec('prettier', ['--check', ...changedFiles], {
       ignoreReturnCode: true,
       listeners: {
-        stdout: (data: Buffer) => {
-          stdout += data.toString()
-        },
         stderr: (data: Buffer) => {
           stderr += data.toString()
         }
@@ -86,7 +82,7 @@ export async function run(): Promise<void> {
     })
 
     let body
-    if (!stdout) {
+    if (exitCode === 0) {
       body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
       const prettierOutput = stderr
@@ -123,12 +119,12 @@ export async function run(): Promise<void> {
       })
     }
 
-    if (stderr) {
-      setFailed('Prettier check failed 😢')
-      setOutput('exitCode', 1)
-    } else {
+    if (exitCode === 0) {
       info('Prettier check passed 🎉')
       setOutput('exitCode', 0)
+    } else {
+      setFailed('Prettier check failed 😢')
+      setOutput('exitCode', exitCode)
     }
   }
 }
