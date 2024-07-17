@@ -54,6 +54,7 @@ export async function run(): Promise<void> {
   const commentIdentifier = '<!-- prettier-check-comment -->'
 
   if (changedFiles.length === 0) {
+    info('No files to check')
     const body = `${commentIdentifier}\nPrettier check passed! 🎉`
     const { data: comments } = await github.rest.issues.listComments({
       owner: context.repo.owner,
@@ -72,6 +73,8 @@ export async function run(): Promise<void> {
       })
     }
   } else {
+    info('Matched changed files:')
+    info(changedFiles.join('\n'))
     await runExec(`npm install --global prettier@${prettierVersion}`).catch(err => {
       setFailed(err.message)
     })

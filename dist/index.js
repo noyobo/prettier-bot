@@ -29898,16 +29898,20 @@ async function run() {
         }
     }
     else {
+        (0, core_1.info)('Matched changed files:');
+        (0, core_1.info)(changedFiles.join('\n'));
         await runExec(`npm install --global prettier@${prettierVersion}`).catch(err => {
             (0, core_1.setFailed)(err.message);
         });
         const child = await runExec(`npx prettier --check ${changedFiles.join(' ')}`);
         const prettierOutput = child.stderr.trim();
         let body;
+        (0, core_1.info)(child.stdout);
         if (!child.err) {
             body = `${commentIdentifier}\nPrettier check passed! 🎉`;
         }
         else {
+            (0, core_1.warning)(prettierOutput);
             const lines = prettierOutput.trim().split('\n');
             lines.pop();
             const prettierCommand = `npx prettier --write ${lines
@@ -29943,7 +29947,7 @@ async function run() {
             (0, core_1.setOutput)('exitCode', 1);
         }
         else {
-            console.log('Prettier check passed');
+            (0, core_1.info)('Prettier check passed');
             (0, core_1.setOutput)('exitCode', 0);
         }
     }
