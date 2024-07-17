@@ -1,9 +1,8 @@
 import { getInput, setFailed, setOutput, info, warning } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
-import { exec } from 'node:child_process'
+import { exec } from '@actions/exec'
 import fs from 'node:fs'
 import ignore from 'ignore'
-import { ExecException } from 'child_process'
 
 export async function run(): Promise<void> {
   const token = getInput('github_token')
@@ -43,14 +42,6 @@ export async function run(): Promise<void> {
     changedFiles = changedFiles.filter(f => !ig.ignores(f))
   }
 
-  const runExec = (cmd: string): Promise<{ err: ExecException | null; stdout: string; stderr: string }> => {
-    return new Promise(resolve => {
-      exec(cmd, (err, stdout, stderr) => {
-        resolve({ err, stdout, stderr })
-      })
-    })
-  }
-
   const commentIdentifier = '<!-- prettier-check-comment -->'
 
   if (changedFiles.length === 0) {
@@ -74,19 +65,34 @@ export async function run(): Promise<void> {
     }
   } else {
     info('Matched changed files:')
-    info(changedFiles.join('\n'))
-    await runExec(`npm install --global prettier@${prettierVersion}`).catch(err => {
-      setFailed(err.message)
+    info(changedFiles.map(f => `- ${f}`).join('\n'))
+    info('')
+    info(`Installing prettier@${prettierVersion}`)
+    await exec('npm', ['install', '--global', `prettier@${prettierVersion}`])
+
+    let stdout = ''
+    let stderr = ''
+
+    await exec('npx', ['prettier', '--check', ...changedFiles], {
+      failOnStdErr: false,
+      listeners: {
+        stdout: (data: Buffer) => {
+          stdout += data.toString()
+        },
+        stderr: (data: Buffer) => {
+          stderr += data.toString()
+        }
+      }
     })
-    const child = await runExec(`npx prettier --check ${changedFiles.join(' ')}`)
-    const prettierOutput = child.stderr.trim()
+
     let body
 
-    info(child.stdout)
-    if (!child.err) {
+    info(stdout)
+    warning(stderr)
+    if (!stdout) {
       body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
-      warning(prettierOutput)
+      const prettierOutput = stderr
       const lines = prettierOutput.trim().split('\n')
       lines.pop()
       const prettierCommand = `npx prettier --write ${lines
@@ -120,7 +126,7 @@ export async function run(): Promise<void> {
       })
     }
 
-    if (child.err) {
+    if (stderr) {
       setFailed('Prettier check failed')
       setOutput('exitCode', 1)
     } else {
