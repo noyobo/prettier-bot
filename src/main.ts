@@ -1,4 +1,4 @@
-import { getInput, setFailed, setOutput, info, warning } from '@actions/core'
+import { getInput, setFailed, setOutput, info } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { exec } from '@actions/exec'
 import fs from 'node:fs'
@@ -12,7 +12,7 @@ export async function run(): Promise<void> {
   const github = getOctokit(token)
 
   const getAllChangedFiles = async (): Promise<string[]> => {
-    const changedFiles: string[] = []
+    const changedFiles: string[] = [];;;;
     let page = 1
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -73,7 +73,7 @@ export async function run(): Promise<void> {
     let stdout = ''
     let stderr = ''
 
-    await exec('npx', ['prettier', '--check', ...changedFiles], {
+    await exec('prettier', ['--check', ...changedFiles], {
       failOnStdErr: false,
       listeners: {
         stdout: (data: Buffer) => {
@@ -86,9 +86,6 @@ export async function run(): Promise<void> {
     })
 
     let body
-
-    info(stdout)
-    warning(stderr)
     if (!stdout) {
       body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
@@ -127,10 +124,10 @@ export async function run(): Promise<void> {
     }
 
     if (stderr) {
-      setFailed('Prettier check failed')
+      setFailed('Prettier check failed 😢')
       setOutput('exitCode', 1)
     } else {
-      info('Prettier check passed')
+      info('Prettier check passed 🎉')
       setOutput('exitCode', 0)
     }
   }
