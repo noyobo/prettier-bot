@@ -1,4 +1,4 @@
-import { getInput, setFailed, setOutput } from '@actions/core'
+import { getInput, setFailed, setOutput, info, warning } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 import { exec } from 'node:child_process'
 import fs from 'node:fs'
@@ -79,10 +79,11 @@ export async function run(): Promise<void> {
     const prettierOutput = child.stderr.trim()
     let body
 
+    info(child.stdout)
     if (!child.err) {
       body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
-      console.log(prettierOutput);
+      warning(prettierOutput)
       const lines = prettierOutput.trim().split('\n')
       lines.pop()
       const prettierCommand = `npx prettier --write ${lines
@@ -120,7 +121,7 @@ export async function run(): Promise<void> {
       setFailed('Prettier check failed')
       setOutput('exitCode', 1)
     } else {
-      console.log('Prettier check passed')
+      info('Prettier check passed')
       setOutput('exitCode', 0)
     }
   }
