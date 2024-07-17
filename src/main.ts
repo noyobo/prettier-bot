@@ -6,7 +6,7 @@ import ignore from 'ignore'
 
 function quote(args: string[]): string[] {
   // add slashes to escape quotes
-  return args.map(arg => arg.replace(/(['"[\]<>(){}\s])/g, '$1'))
+  return args.map(arg => arg.replace(/([$'"[\]<>(){}\s])/g, '\\$1'))
 }
 
 export async function run(): Promise<void> {
@@ -74,7 +74,7 @@ export async function run(): Promise<void> {
     await exec('npm', ['install', '--global', `prettier@${prettierVersion}`])
 
     let stderr = ''
-    const exitCode = await exec('prettier', quote(['--check', ...changedFiles]), {
+    const exitCode = await exec('prettier', ['--check', ...changedFiles], {
       ignoreReturnCode: true,
       listeners: {
         stderr: (data: Buffer) => {
@@ -90,7 +90,9 @@ export async function run(): Promise<void> {
       const prettierOutput = stderr
       const lines = prettierOutput.trim().split('\n')
       lines.pop()
-      const prettierCommand = `npx prettier --write ${quote(lines.map(line => line.trim().replace('[warn] ', ''))).join(' ')}`
+      const prettierCommand = `npx prettier --write ${quote(lines.map(line => line.trim().replace('[warn] ', ''))).join(
+        ' '
+      )}`
       body = `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``
     }
 

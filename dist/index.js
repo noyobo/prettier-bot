@@ -31069,7 +31069,7 @@ const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
 function quote(args) {
     // add slashes to escape quotes
-    return args.map(arg => arg.replace(/(['"[\]<>(){}\s])/g, '$1'));
+    return args.map(arg => arg.replace(/([$'"[\]<>(){}\s])/g, '\\$1'));
 }
 async function run() {
     const token = (0, core_1.getInput)('github_token');
@@ -31127,7 +31127,7 @@ async function run() {
         (0, core_1.info)(changedFiles.map(f => `- ${f}`).join('\n'));
         await (0, exec_1.exec)('npm', ['install', '--global', `prettier@${prettierVersion}`]);
         let stderr = '';
-        const exitCode = await (0, exec_1.exec)('prettier', quote(['--check', ...changedFiles]), {
+        const exitCode = await (0, exec_1.exec)('prettier', ['--check', ...changedFiles], {
             ignoreReturnCode: true,
             listeners: {
                 stderr: (data) => {
