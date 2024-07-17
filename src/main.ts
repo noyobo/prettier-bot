@@ -66,13 +66,10 @@ export async function run(): Promise<void> {
   } else {
     info('Matched changed files:')
     info(changedFiles.map(f => `- ${f}`).join('\n'))
-    info('')
-    info(`Installing prettier@${prettierVersion}`)
     await exec('npm', ['install', '--global', `prettier@${prettierVersion}`])
 
     let stderr = ''
-
-    const exitCode = await exec('prettier', ['--check', ...changedFiles], {
+    const exitCode = await exec('prettier', ['--check', ...changedFiles.map(f => `'${f}'`)], {
       ignoreReturnCode: true,
       listeners: {
         stderr: (data: Buffer) => {
@@ -120,11 +117,10 @@ export async function run(): Promise<void> {
     }
 
     if (exitCode === 0) {
-      info('Prettier check passed 🎉')
-      setOutput('exitCode', 0)
+      info('\nPrettier check passed 🎉')
     } else {
-      setFailed('Prettier check failed 😢')
-      setOutput('exitCode', exitCode)
+      setFailed('\nPrettier check failed 😢')
     }
+    setOutput('exitCode', 0)
   }
 }

@@ -31121,11 +31121,9 @@ async function run() {
     else {
         (0, core_1.info)('Matched changed files:');
         (0, core_1.info)(changedFiles.map(f => `- ${f}`).join('\n'));
-        (0, core_1.info)('');
-        (0, core_1.info)(`Installing prettier@${prettierVersion}`);
         await (0, exec_1.exec)('npm', ['install', '--global', `prettier@${prettierVersion}`]);
         let stderr = '';
-        const exitCode = await (0, exec_1.exec)('prettier', ['--check', ...changedFiles], {
+        const exitCode = await (0, exec_1.exec)('prettier', ['--check', ...changedFiles.map(f => `'${f}'`)], {
             ignoreReturnCode: true,
             listeners: {
                 stderr: (data) => {
@@ -31170,13 +31168,12 @@ async function run() {
             });
         }
         if (exitCode === 0) {
-            (0, core_1.info)('Prettier check passed 🎉');
-            (0, core_1.setOutput)('exitCode', 0);
+            (0, core_1.info)('\nPrettier check passed 🎉');
         }
         else {
-            (0, core_1.setFailed)('Prettier check failed 😢');
-            (0, core_1.setOutput)('exitCode', exitCode);
+            (0, core_1.setFailed)('\nPrettier check failed 😢');
         }
+        (0, core_1.setOutput)('exitCode', 0);
     }
 }
 
