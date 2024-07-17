@@ -29841,8 +29841,9 @@ const node_child_process_1 = __nccwpck_require__(7718);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
 async function run() {
-    const token = (0, core_1.getInput)('github-token');
-    const prettierIgnore = (0, core_1.getInput)('prettier-ignore');
+    const token = (0, core_1.getInput)('github_token');
+    const prettierIgnore = (0, core_1.getInput)('prettier_ignore');
+    const prettierVersion = (0, core_1.getInput)('prettier_version');
     const github = (0, github_1.getOctokit)(token);
     const getAllChangedFiles = async () => {
         const changedFiles = [];
@@ -29897,6 +29898,9 @@ async function run() {
         }
     }
     else {
+        await runExec(`npm install --global prettier@${prettierVersion}`).catch(err => {
+            (0, core_1.setFailed)(err.message);
+        });
         const child = await runExec(`npx prettier --check ${changedFiles.join(' ')}`);
         const prettierOutput = child.stderr.trim();
         let body;
