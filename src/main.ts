@@ -82,6 +82,7 @@ export async function run(): Promise<void> {
     if (!child.err) {
       body = `${commentIdentifier}\nPrettier check passed! 🎉`
     } else {
+      console.log(prettierOutput);
       const lines = prettierOutput.trim().split('\n')
       lines.pop()
       const prettierCommand = `npx prettier --write ${lines
