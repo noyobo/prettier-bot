@@ -31067,6 +31067,10 @@ const github_1 = __nccwpck_require__(5438);
 const exec_1 = __nccwpck_require__(1514);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
+function quote(args) {
+    // add slashes to escape quotes
+    return args.map(arg => arg.replace(/(['"[\]<>(){}\s])/g, '$1'));
+}
 async function run() {
     const token = (0, core_1.getInput)('github_token');
     const prettierIgnore = (0, core_1.getInput)('prettier_ignore');
@@ -31123,7 +31127,7 @@ async function run() {
         (0, core_1.info)(changedFiles.map(f => `- ${f}`).join('\n'));
         await (0, exec_1.exec)('npm', ['install', '--global', `prettier@${prettierVersion}`]);
         let stderr = '';
-        const exitCode = await (0, exec_1.exec)('prettier', ['--check', ...changedFiles.map(f => encodeURI(f))], {
+        const exitCode = await (0, exec_1.exec)('prettier', quote(['--check', ...changedFiles]), {
             ignoreReturnCode: true,
             listeners: {
                 stderr: (data) => {
@@ -31139,10 +31143,7 @@ async function run() {
             const prettierOutput = stderr;
             const lines = prettierOutput.trim().split('\n');
             lines.pop();
-            const prettierCommand = `npx prettier --write ${lines
-                .map(line => line.trim().replace('[warn] ', ''))
-                .map(f => encodeURI(f))
-                .join(' ')}`;
+            const prettierCommand = `npx prettier --write ${quote(lines.map(line => line.trim().replace('[warn] ', ''))).join(' ')}`;
             body = `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``;
         }
         const { data: comments } = await github.rest.issues.listComments({
