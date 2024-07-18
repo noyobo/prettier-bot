@@ -5,8 +5,7 @@ import fs from 'node:fs'
 import ignore from 'ignore'
 
 function quote(args: string[]): string[] {
-  // add slashes to escape quotes
-  return args.map(arg => arg.replace(/([$'"[\]<>(){}\s])/g, '\\$1'))
+  return args.map(arg => arg.replace(/([~!#$^&*()\][{}|;'"<>?`\s])/g, '\\$1'))
 }
 
 export async function run(): Promise<void> {

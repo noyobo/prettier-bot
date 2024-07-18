@@ -31067,9 +31067,10 @@ const github_1 = __nccwpck_require__(5438);
 const exec_1 = __nccwpck_require__(1514);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
+const escapeCharts = /([~!#$^&*()\][{}|;'"<>?`\s])/g;
 function quote(args) {
     // add slashes to escape quotes
-    return args.map(arg => arg.replace(/([$'"[\]<>(){}\s])/g, '\\$1'));
+    return args.map(arg => arg.replace(escapeCharts, '\\$1'));
 }
 async function run() {
     const token = (0, core_1.getInput)('github_token');
