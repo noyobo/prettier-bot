@@ -3,13 +3,17 @@ import { context, getOctokit } from '@actions/github'
 import { exec } from '@actions/exec'
 import fs from 'node:fs'
 import ignore from 'ignore'
+import { extname } from 'node:path'
 
 export async function run(): Promise<void> {
   const token = getInput('github_token')
   const prettierIgnore = getInput('prettier_ignore')
   const prettierVersion = getInput('prettier_version')
+  const fileExtensions = getInput('file_extensions')
   const github = getOctokit(token)
   const commentIdentifier = '<!-- prettier-check-comment -->'
+
+  const fileExts = fileExtensions.split(',').map(ext => ext.trim())
 
   async function getAllChangedFiles(): Promise<string[]> {
     const changedFiles: string[] = []
@@ -27,7 +31,10 @@ export async function run(): Promise<void> {
       changedFiles.push(...files.filter(f => f.status !== 'removed').map(f => f.filename))
       page++
     }
-    return changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f))
+    return changedFiles.filter(f => {
+      const ext = extname(f)
+      return fileExts.includes(ext)
+    })
   }
 
   function filterFiles(files: string[]): string[] {

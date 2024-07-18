@@ -31067,12 +31067,15 @@ const github_1 = __nccwpck_require__(5438);
 const exec_1 = __nccwpck_require__(1514);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
+const node_path_1 = __nccwpck_require__(9411);
 async function run() {
     const token = (0, core_1.getInput)('github_token');
     const prettierIgnore = (0, core_1.getInput)('prettier_ignore');
     const prettierVersion = (0, core_1.getInput)('prettier_version');
+    const fileExtensions = (0, core_1.getInput)('file_extensions');
     const github = (0, github_1.getOctokit)(token);
     const commentIdentifier = '<!-- prettier-check-comment -->';
+    const fileExts = fileExtensions.split(',').map(ext => ext.trim());
     async function getAllChangedFiles() {
         const changedFiles = [];
         let page = 1;
@@ -31090,7 +31093,10 @@ async function run() {
             changedFiles.push(...files.filter(f => f.status !== 'removed').map(f => f.filename));
             page++;
         }
-        return changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f));
+        return changedFiles.filter(f => {
+            const ext = (0, node_path_1.extname)(f);
+            return fileExts.includes(ext);
+        });
     }
     function filterFiles(files) {
         if (node_fs_1.default.existsSync(prettierIgnore)) {
@@ -31274,6 +31280,14 @@ module.exports = require("node:events");
 
 "use strict";
 module.exports = require("node:fs");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 
