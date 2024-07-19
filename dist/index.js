@@ -31067,12 +31067,16 @@ const github_1 = __nccwpck_require__(5438);
 const exec_1 = __nccwpck_require__(1514);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
+const node_path_1 = __nccwpck_require__(9411);
 async function run() {
     const token = (0, core_1.getInput)('github_token');
     const prettierIgnore = (0, core_1.getInput)('prettier_ignore');
     const prettierVersion = (0, core_1.getInput)('prettier_version');
+    const fileExtensions = (0, core_1.getInput)('file_extensions');
     const github = (0, github_1.getOctokit)(token);
-    const getAllChangedFiles = async () => {
+    const commentIdentifier = '<!-- prettier-check-comment -->';
+    const fileExts = fileExtensions.split(',').map(ext => ext.trim());
+    async function getAllChangedFiles() {
         const changedFiles = [];
         let page = 1;
         // eslint-disable-next-line no-constant-condition
@@ -31084,67 +31088,53 @@ async function run() {
                 per_page: 100,
                 page
             });
-            if (files.length === 0) {
+            if (files.length === 0)
                 break;
-            }
-            const notDeletedFiles = files.filter(f => f.status !== 'removed');
-            changedFiles.push(...notDeletedFiles.map(f => f.filename));
+            changedFiles.push(...files.filter(f => f.status !== 'removed').map(f => f.filename));
             page++;
         }
-        return changedFiles;
-    };
-    let changedFiles = await getAllChangedFiles();
-    changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f));
-    if (node_fs_1.default.existsSync(prettierIgnore)) {
-        const ig = (0, ignore_1.default)().add(node_fs_1.default.readFileSync(prettierIgnore, 'utf-8'));
-        changedFiles = changedFiles.filter(f => !ig.ignores(f));
+        return changedFiles.filter(f => {
+            const ext = (0, node_path_1.extname)(f);
+            return fileExts.includes(ext);
+        });
     }
-    const commentIdentifier = '<!-- prettier-check-comment -->';
+    function filterFiles(files) {
+        if (node_fs_1.default.existsSync(prettierIgnore)) {
+            const ig = (0, ignore_1.default)().add(node_fs_1.default.readFileSync(prettierIgnore, 'utf-8'));
+            return files.filter(f => !ig.ignores(f));
+        }
+        return files;
+    }
+    function quote(args) {
+        return args.map(arg => arg.replace(/([~!#$^&*()\][{}|;'"<>?`\s])/g, '\\$1'));
+    }
+    let changedFiles = await getAllChangedFiles();
+    changedFiles = filterFiles(changedFiles);
     if (changedFiles.length === 0) {
         (0, core_1.info)('No files to check');
-        const body = `${commentIdentifier}\nPrettier check passed! 🎉`;
-        const { data: comments } = await github.rest.issues.listComments({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            issue_number: github_1.context.issue.number
-        });
-        const comment = comments.find(c => c.body.includes(commentIdentifier));
-        if (comment) {
-            await github.rest.issues.updateComment({
-                owner: github_1.context.repo.owner,
-                repo: github_1.context.repo.repo,
-                comment_id: comment.id,
-                body
-            });
-        }
+        await updateComment(`${commentIdentifier}\nPrettier check passed! 🎉`);
     }
     else {
         (0, core_1.info)('Matched changed files:');
         (0, core_1.info)(changedFiles.map(f => `- ${f}`).join('\n'));
         await (0, exec_1.exec)('npm', ['install', '--global', `prettier@${prettierVersion}`]);
         let stderr = '';
-        const exitCode = await (0, exec_1.exec)('prettier', ['--check', ...changedFiles.map(f => encodeURI(f))], {
+        const exitCode = await (0, exec_1.exec)('prettier', ['--check', ...changedFiles], {
             ignoreReturnCode: true,
-            listeners: {
-                stderr: (data) => {
-                    stderr += data.toString();
-                }
-            }
+            listeners: { stderr: data => (stderr += data.toString()) }
         });
-        let body;
-        if (exitCode === 0) {
-            body = `${commentIdentifier}\nPrettier check passed! 🎉`;
+        const prettierOutput = stderr.trim();
+        const prettierCommand = `npx prettier --write ${quote(prettierOutput.split('\n').map(line => line.trim().replace('[warn] ', ''))).join(' ')}`;
+        const body = exitCode === 0
+            ? `${commentIdentifier}\nPrettier check passed! 🎉`
+            : `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``;
+        await updateComment(body);
+        if (exitCode !== 0) {
+            (0, core_1.setFailed)('\nPrettier check failed 😢');
         }
-        else {
-            const prettierOutput = stderr;
-            const lines = prettierOutput.trim().split('\n');
-            lines.pop();
-            const prettierCommand = `npx prettier --write ${lines
-                .map(line => line.trim().replace('[warn] ', ''))
-                .map(f => encodeURI(f))
-                .join(' ')}`;
-            body = `${commentIdentifier}\n🚨 Prettier check failed for the following files:\n\n\`\`\`\n${prettierOutput.trim()}\n\`\`\`\n\nTo fix the issue, run the following command:\n\n\`\`\`\n${prettierCommand}\n\`\`\``;
-        }
+        (0, core_1.setOutput)('exitCode', exitCode);
+    }
+    async function updateComment(body) {
         const { data: comments } = await github.rest.issues.listComments({
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo,
@@ -31167,13 +31157,6 @@ async function run() {
                 body
             });
         }
-        if (exitCode === 0) {
-            (0, core_1.info)('\nPrettier check passed 🎉');
-        }
-        else {
-            (0, core_1.setFailed)('\nPrettier check failed 😢');
-        }
-        (0, core_1.setOutput)('exitCode', 0);
     }
 }
 
@@ -31297,6 +31280,14 @@ module.exports = require("node:events");
 
 "use strict";
 module.exports = require("node:fs");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 
