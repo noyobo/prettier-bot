@@ -31067,15 +31067,16 @@ const github_1 = __nccwpck_require__(5438);
 const exec_1 = __nccwpck_require__(1514);
 const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const ignore_1 = __importDefault(__nccwpck_require__(1230));
-const escapeCharts = /([~!#$^&*()\][{}|;'"<>?`\s])/g;
+const node_path_1 = __nccwpck_require__(9411);
 function quote(args) {
-    // add slashes to escape quotes
-    return args.map(arg => arg.replace(escapeCharts, '\\$1'));
+    return args.map(arg => arg.replace(/([~!#$^&*()\][{}|;'"<>?`\s])/g, '\\$1'));
 }
 async function run() {
     const token = (0, core_1.getInput)('github_token');
     const prettierIgnore = (0, core_1.getInput)('prettier_ignore');
     const prettierVersion = (0, core_1.getInput)('prettier_version');
+    const fileExtensions = (0, core_1.getInput)('file_extensions');
+    const fileExts = fileExtensions.split(',').map(ext => ext.trim());
     const github = (0, github_1.getOctokit)(token);
     const getAllChangedFiles = async () => {
         const changedFiles = [];
@@ -31099,7 +31100,10 @@ async function run() {
         return changedFiles;
     };
     let changedFiles = await getAllChangedFiles();
-    changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f));
+    changedFiles = changedFiles.filter(f => {
+        const ext = (0, node_path_1.extname)(f);
+        return fileExts.includes(ext);
+    });
     if (node_fs_1.default.existsSync(prettierIgnore)) {
         const ig = (0, ignore_1.default)().add(node_fs_1.default.readFileSync(prettierIgnore, 'utf-8'));
         changedFiles = changedFiles.filter(f => !ig.ignores(f));
@@ -31299,6 +31303,14 @@ module.exports = require("node:events");
 
 "use strict";
 module.exports = require("node:fs");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 
