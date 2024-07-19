@@ -39,5 +39,5 @@ jobs:
 - Use root `.prettierrc` file for prettier configuration
 - Use root `.prettierignore` file for prettier ignore
 
-[build-img]:https://github.com/noyobo/prettier-bot/actions/workflows/ci.yml/badge.svg
-[build-url]:https://github.com/noyobo/prettier-bot/actions/workflows/ci.yml
+[build-img]: https://github.com/noyobo/prettier-bot/actions/workflows/ci.yml/badge.svg
+[build-url]: https://github.com/noyobo/prettier-bot/actions/workflows/ci.yml
