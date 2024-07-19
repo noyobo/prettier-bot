@@ -3,6 +3,7 @@ import { context, getOctokit } from '@actions/github'
 import { exec } from '@actions/exec'
 import fs from 'node:fs'
 import ignore from 'ignore'
+import { extname } from 'node:path'
 
 function quote(args: string[]): string[] {
   return args.map(arg => arg.replace(/([~!#$^&*()\][{}|;'"<>?`\s])/g, '\\$1'))
@@ -12,6 +13,9 @@ export async function run(): Promise<void> {
   const token = getInput('github_token')
   const prettierIgnore = getInput('prettier_ignore')
   const prettierVersion = getInput('prettier_version')
+  const fileExtensions = getInput('file_extensions')
+
+  const fileExts = fileExtensions.split(',').map(ext => ext.trim())
 
   const github = getOctokit(token)
 
@@ -39,7 +43,10 @@ export async function run(): Promise<void> {
 
   let changedFiles = await getAllChangedFiles()
 
-  changedFiles = changedFiles.filter(f => /\.(js|jsx|ts|tsx|json|json5|css|less|scss|sass|html|md|mdx|vue)$/.test(f))
+  changedFiles = changedFiles.filter(f => {
+    const ext = extname(f)
+    return fileExts.includes(ext)
+  })
 
   if (fs.existsSync(prettierIgnore)) {
     const ig = ignore().add(fs.readFileSync(prettierIgnore, 'utf-8'))

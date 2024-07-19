@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -45,6 +48,7 @@ jobs:
 
   test-action:
     name: GitHub Actions Test
+    if: github.event_name == 'pull_request'
     runs-on: ${{ matrix.os }}
 
     strategy:
