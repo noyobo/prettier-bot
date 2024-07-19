@@ -19,10 +19,6 @@ inputs:
     description: The version of prettier to install
     default: 3.x
     required: false
-  file_extensions:
-    description: The file extensions to filter pull request changed files
-    default: '.js,.jsx,.ts,.tsx,.json,.json5,.css,.less,.scss,.sass,.html,.md,.mdx,.vue,.yaml,.yml'
-    required: false
 
 outputs:
   exitCode:
