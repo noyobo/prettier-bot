@@ -67,7 +67,9 @@ export async function run(): Promise<void> {
     })
 
     const prettierOutput = stderr.trim()
-    const prettierCommand = `npx prettier --write ${quote(prettierOutput.split('\n').map(line => line.trim().replace('[warn] ', ''))).join(' ')}`
+    const lines = prettierOutput.split('\n');
+    lines.pop()
+    const prettierCommand = `npx prettier --write ${quote(lines.map(line => line.trim().replace('[warn] ', ''))).join(' ')}`
     const body =
       exitCode === 0
         ? `${commentIdentifier}\nPrettier check passed! 🎉`
