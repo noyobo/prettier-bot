@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -45,7 +48,12 @@ jobs:
 
   test-action:
     name: GitHub Actions Test
-    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - name: Checkout
