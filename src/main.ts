@@ -46,6 +46,10 @@ export async function run(): Promise<void> {
   changedFiles = changedFiles.filter(f => {
     const ext = extname(f)
     return fileExts.includes(ext)
+  }).filter(f => {
+    // ignore pnpm-lock.yaml
+    return !f.endsWith('pnpm-lock.yaml');
+
   })
 
   if (fs.existsSync(prettierIgnore)) {
