@@ -30,7 +30,7 @@ jobs:
 
       - name: Update major tag
         run: |
-          git tag -fa v$MAJOR_VERSION -m "Update v$MAJOR_VERSION tag"
-          git push origin v$MAJOR_VERSION --force
+          git tag -fa $MAJOR_VERSION -m "Update $MAJOR_VERSION tag"
+          git push origin $MAJOR_VERSION --force
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
