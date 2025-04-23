@@ -43,14 +43,15 @@ export async function run(): Promise<void> {
 
   let changedFiles = await getAllChangedFiles()
 
-  changedFiles = changedFiles.filter(f => {
-    const ext = extname(f)
-    return fileExts.includes(ext)
-  }).filter(f => {
-    // ignore pnpm-lock.yaml
-    return !f.endsWith('pnpm-lock.yaml');
-
-  })
+  changedFiles = changedFiles
+    .filter(f => {
+      const ext = extname(f)
+      return fileExts.includes(ext)
+    })
+    .filter(f => {
+      // ignore pnpm-lock.yaml
+      return !f.endsWith('pnpm-lock.yaml')
+    })
 
   if (fs.existsSync(prettierIgnore)) {
     const ig = ignore().add(fs.readFileSync(prettierIgnore, 'utf-8'))
